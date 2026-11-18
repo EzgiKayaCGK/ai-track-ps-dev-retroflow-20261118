@@ -30,6 +30,12 @@ Miro boards, and shared Google Docs the 12 dev teams currently use to run retros
 ./gradlew test
 ```
 
+## Mutation testing
+
+With Java 21 and Maven installed, run `mvn test-compile org.pitest:pitest-maven:mutationCoverage`.
+PIT mutates only service classes and runs the project's test classes. The HTML report is at
+`target/pit-reports/index.html`, and the XML report is at `target/pit-reports/mutations.xml`.
+
 ## Project structure
 
 Standard Spring Boot layered structure — controllers, services, repositories, entities.

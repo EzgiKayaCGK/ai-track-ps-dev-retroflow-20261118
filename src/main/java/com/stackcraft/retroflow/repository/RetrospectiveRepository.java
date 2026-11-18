@@ -1,7 +1,11 @@
 package com.stackcraft.retroflow.repository;
 
 import com.stackcraft.retroflow.entity.Retrospective;
+import com.stackcraft.retroflow.entity.RetrospectiveStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * STUB — left behind by the previous vendor.
@@ -11,4 +15,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * OPEN retrospective for a team).
  */
 public interface RetrospectiveRepository extends JpaRepository<Retrospective, Long> {
+
+    boolean existsByTeamIdAndStatus(Long teamId, RetrospectiveStatus status);
+
+    boolean existsByTeamIdAndStatusAndDeletedFalse(Long teamId, RetrospectiveStatus status);
+
+    boolean existsByTitleIgnoreCase(String title);
+
+    boolean existsByTitleIgnoreCaseAndDeletedFalse(String title);
+
+    Optional<Retrospective> findByTitleIgnoreCaseAndDeletedFalse(String title);
+
+    List<Retrospective> findAllByDeletedFalseOrderByDateDescIdAsc();
+
+    List<Retrospective> findAllByTeamIdAndDeletedFalseOrderByDateDescIdAsc(Long teamId);
+
+    Optional<Retrospective> findByTeamIdAndStatusAndDeletedFalse(Long teamId, RetrospectiveStatus status);
+
+    Optional<Retrospective> findByIdAndDeletedFalse(Long id);
 }

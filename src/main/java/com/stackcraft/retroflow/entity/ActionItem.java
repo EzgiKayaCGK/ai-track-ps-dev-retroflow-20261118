@@ -1,37 +1,57 @@
 package com.stackcraft.retroflow.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * STUB — left behind by the previous vendor.
- *
- * An ActionItem is a special kind of FeedbackItem (type ACTION_ITEM) that
- * additionally tracks a priority (LOW/MEDIUM/HIGH) and a boolean
- * completed flag. Action items can be marked completed, but a completed
- * action item can never be uncompleted. They must also be retrievable
- * filtered by priority and by completed status.
- *
- * This class is not yet related to FeedbackItem — deciding and
- * implementing the inheritance strategy between the two (single table,
- * joined, or a composition approach) is part of Block 1. Nothing has
- * been decided yet; this is deliberately just a bare stub.
+ * Feedback item with action-item-specific priority and completion state.
  */
 @Entity
-public class ActionItem {
+@Table(name = "action_items")
+@DiscriminatorValue("ACTION_ITEM")
+@PrimaryKeyJoinColumn(name = "feedback_item_id")
+public class ActionItem extends FeedbackItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ActionItemPriority priority;
 
-    public Long getId() {
-        return id;
+    @Column(nullable = false)
+    private boolean completed;
+
+    public ActionItem() {
+        setType(FeedbackItemType.ACTION_ITEM);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    @Override
+    public void setType(FeedbackItemType type) {
+        if (type != FeedbackItemType.ACTION_ITEM) {
+            throw new IllegalArgumentException("An action item must have type ACTION_ITEM.");
+        }
+        super.setType(type);
+    }
+
+    public ActionItemPriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(ActionItemPriority priority) {
+        this.priority = priority;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
 }
