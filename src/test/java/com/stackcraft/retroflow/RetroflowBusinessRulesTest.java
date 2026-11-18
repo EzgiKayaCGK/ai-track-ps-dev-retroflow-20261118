@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * Do not modify the test assertions. Do not skip or disable tests.
  * If a test feels wrong, raise it — but don't quietly remove it.
+ * test
  */
 @SpringBootTest
 class RetroflowBusinessRulesTest {
