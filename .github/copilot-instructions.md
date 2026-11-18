@@ -1,0 +1,13 @@
+- Use Java 21, Spring Boot 3.3.4, Maven, Spring Data JPA, and in-memory H2.
+- Follow the existing layered structure: controllers, services, repositories, entities, and DTOs.
+- Use Java naming conventions: `UpperCamelCase` for types and `lowerCamelCase` for methods and fields.
+- Validate external input and use DTOs at API boundaries; don’t expose persistence entities as API contracts.
+- Prevent injection: never build queries by concatenating user input; use Spring Data parameters or safely bound values.
+- Enforce business rules in the service layer, not only in controllers.
+- Preserve the documented `X-User-Name` header and `{"message":"..."}` error response shape.
+- Map errors using the existing exception types and appropriate HTTP statuses; don’t swallow exceptions or return success-shaped fallbacks.
+- Write focused tests with the existing Spring Boot test stack; cover happy paths, validation, and key business rules.
+- Test behavior at the relevant service or API boundary, including authorization-by-membership and invalid state transitions.
+- Before saying work is done, run `mvn test` and report any failures accurately.
+- Never commit secrets, bypass failing tests, or claim unverified behavior works.
+- Never add an authentication layer or unrelated changes without a clear requirement.

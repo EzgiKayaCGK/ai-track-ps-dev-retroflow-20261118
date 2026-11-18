@@ -1,37 +1,78 @@
 package com.stackcraft.retroflow.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
-/**
- * STUB — left behind by the previous vendor.
- *
- * An ActionItem is a special kind of FeedbackItem (type ACTION_ITEM) that
- * additionally tracks a priority (LOW/MEDIUM/HIGH) and a boolean
- * completed flag. Action items can be marked completed, but a completed
- * action item can never be uncompleted. They must also be retrievable
- * filtered by priority and by completed status.
- *
- * This class is not yet related to FeedbackItem — deciding and
- * implementing the inheritance strategy between the two (single table,
- * joined, or a composition approach) is part of Block 1. Nothing has
- * been decided yet; this is deliberately just a bare stub.
- */
 @Entity
-public class ActionItem {
+@Table(
+    name = "action_item",
+    indexes = {
+        @Index(name = "ix_action_item_priority", columnList = "priority"),
+        @Index(name = "ix_action_item_completed", columnList = "completed")
+    }
+)
+@DiscriminatorValue("ACTION_ITEM")
+public class ActionItem extends FeedbackItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private ActionPriority priority;
 
-    public Long getId() {
-        return id;
+    @Column(nullable = false)
+    private boolean completed = false;
+
+    public ActionItem() {
+        super();
+        super.setType(FeedbackType.ACTION_ITEM);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public ActionItem(Long id, String content, FeedbackType type,
+                      String submittedBy, Retrospective retrospective,
+                      ActionPriority priority, boolean completed) {
+        super(id, content, requireActionItemType(type), submittedBy, retrospective);
+        this.priority = priority;
+        this.completed = completed;
     }
 
+    private static FeedbackType requireActionItemType(FeedbackType type) {
+        if (type != FeedbackType.ACTION_ITEM) {
+            throw new IllegalArgumentException(
+                "ActionItem type must be ACTION_ITEM"
+            );
+        }
+        return type;
+    }
+
+    @Override
+    public void setType(FeedbackType type) {
+        if (type != FeedbackType.ACTION_ITEM) {
+            throw new IllegalArgumentException(
+                "ActionItem type must be ACTION_ITEM"
+            );
+        }
+        super.setType(type);
+    }
+
+    public ActionPriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(ActionPriority priority) {
+        this.priority = priority;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
 }

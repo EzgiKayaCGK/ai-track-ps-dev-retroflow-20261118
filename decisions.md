@@ -1,0 +1,10 @@
+The team name or member must be unique across all teams. If a duplicate is detected, the API should return a `409 Conflict` status code with an appropriate error message.
+Teams could be retrieved by their name or by a member's name. If no team is found, the API should return a `404 Not Found` status code with an appropriate error message.
+The last member could not be removed from a team. If an attempt is made to remove the last member, the API should return a `400 Bad Request` status code with an appropriate error message.
+The requester will be identified by the `X-User-Name` header in the request. If this header is missing, the API should return a `400 Bad Request` status code with an appropriate error message.
+A retrospective can only be created or closed by a member of the team. If a non-member attempts to create or close a retrospective, the API should return a `403 Forbidden` status code with an appropriate error message.
+Every newly created restrospecive should have a unique title within the team. If a duplicate title is detected, the API should return a `409 Conflict` status code with an appropriate error message.
+For every newly create retrospective, the current date should be used as the retrospective date.
+Check that there is no open restrospective for the team before creating a new one. If an open retrospective already exists, the API should return a `400 Bad Request` status code with an appropriate error message.
+Any changes may be performed on the feedback items only if the retrospective is open. If the retrospective is closed, the API should return a `400 Bad Request` status code with an appropriate error message.
+Action items and feedback items can be considered the same entity, but action items have additional fields. The API should ensure that action items are created with the correct type and that their additional fields are validated.
