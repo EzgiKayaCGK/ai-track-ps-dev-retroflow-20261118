@@ -5,6 +5,7 @@ import com.stackcraft.retroflow.entity.FeedbackItem;
 import com.stackcraft.retroflow.entity.Retrospective;
 import com.stackcraft.retroflow.entity.Team;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -41,6 +42,6 @@ public final class ApiModels {
         }
     }
 
-    public record ErrorResponse(List<String> errors) {
+    public record ErrorResponse(String error, int status, Instant timestamp) {
     }
 }

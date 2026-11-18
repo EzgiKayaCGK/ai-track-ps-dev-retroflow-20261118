@@ -1,6 +1,7 @@
 package com.stackcraft.retroflow.service;
 
 import com.stackcraft.retroflow.entity.Team;
+import com.stackcraft.retroflow.exception.BusinessRuleViolationException;
 import com.stackcraft.retroflow.exception.RetroflowException;
 import com.stackcraft.retroflow.exception.ResourceNotFoundException;
 import com.stackcraft.retroflow.repository.ActionItemRepository;
@@ -36,23 +37,24 @@ public class TeamService {
     public Team createTeam(String name, List<String> members) {
         String normalizedName = validateName(name, "Team name");
         if (teamRepository.existsByNameIgnoreCaseAndDeletedFalse(normalizedName)) {
-            throw new RetroflowException("A team with that name already exists.");
+            throw new BusinessRuleViolationException(teamMessage(normalizedName, "a team with this name already exists"));
         }
         if (members == null || members.isEmpty()) {
-            throw new RetroflowException("A team must have at least one member.");
+            throw new BusinessRuleViolationException(teamMessage(normalizedName, "must have at least one member"));
         }
 
         Set<String> normalizedMembers = new HashSet<>();
         for (String member : members) {
-            String validMember = validateMemberName(member);
+            String validMember = validateMemberName(member, normalizedName);
             if (!normalizedMembers.add(validMember.toLowerCase(Locale.ROOT))) {
-                throw new RetroflowException("Team member names must be unique.");
+                throw new BusinessRuleViolationException(teamMessage(normalizedName, "member names must be unique"));
             }
         }
 
         Team team = new Team();
         team.setName(normalizedName);
-        List<String> validatedMembers = members.stream().map(this::validateMemberName).toList();
+        List<String> validatedMembers = members.stream()
+                .map(member -> validateMemberName(member, normalizedName)).toList();
         team.setMembers(new ArrayList<>(validatedMembers));
         return teamRepository.save(team);
     }
@@ -85,7 +87,7 @@ public class TeamService {
     @Transactional
     public Team addMember(String teamName, String memberName) {
         Team team = findTeam(teamName);
-        String member = validateMemberName(memberName);
+        String member = validateMemberName(memberName, team.getName());
         ensureMemberIsUnique(team, member, null);
         team.getMembers().add(member);
         return teamRepository.save(team);
@@ -95,7 +97,7 @@ public class TeamService {
     public Team editMember(String teamName, String memberName, String replacementName) {
         Team team = findTeam(teamName);
         int index = findMemberIndex(team, memberName);
-        String replacement = validateMemberName(replacementName);
+        String replacement = validateMemberName(replacementName, team.getName());
         ensureMemberIsUnique(team, replacement, index);
         team.getMembers().set(index, replacement);
         return teamRepository.save(team);
@@ -106,7 +108,7 @@ public class TeamService {
         Team team = findTeam(teamName);
         int index = findMemberIndex(team, memberName);
         if (team.getMembers().size() == 1) {
-            throw new RetroflowException("A team must have at least one member.");
+            throw new BusinessRuleViolationException(teamMessage(team.getName(), "must have at least one member"));
         }
         team.getMembers().remove(index);
         return teamRepository.save(team);
@@ -120,44 +122,49 @@ public class TeamService {
                 }
             }
         }
-        throw new ResourceNotFoundException("Team member not found.");
+        throw new ResourceNotFoundException(teamMessage(team.getName(), "member not found"));
     }
 
     private void ensureMemberIsUnique(Team team, String member, Integer ignoredIndex) {
         for (int i = 0; i < team.getMembers().size(); i++) {
             if (!Integer.valueOf(i).equals(ignoredIndex) && team.getMembers().get(i).equalsIgnoreCase(member)) {
-                throw new RetroflowException("Team member names must be unique.");
+                throw new BusinessRuleViolationException(teamMessage(team.getName(), "member names must be unique"));
             }
         }
     }
 
-    private String validateMemberName(String value) {
+    private String validateMemberName(String value, String teamName) {
         if (value == null || value.isBlank() || !value.equals(value.strip()) || characterCount(value) > 256) {
-            throw new RetroflowException("Member name must be non-empty, at most 256 characters, and have no surrounding whitespace.");
+            throw new RetroflowException(teamMessage(teamName,
+                    "member name must be non-empty, at most 256 characters, and have no surrounding whitespace"));
         }
         return value;
     }
 
     private Team findTeam(String name) {
         if (name == null) {
-            throw new ResourceNotFoundException("Team not found.");
+            throw new ResourceNotFoundException(teamMessage("null", "not found"));
         }
         return teamRepository.findByNameIgnoreCaseAndDeletedFalse(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Team not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(teamMessage(name, "not found")));
     }
 
     private String validateName(String value, String label) {
         if (value == null) {
-            throw new RetroflowException(label + " is required.");
+            throw new RetroflowException(teamMessage("new", label + " is required"));
         }
         String validated = value.strip();
         if (validated.isBlank() || characterCount(validated) > 256) {
-            throw new RetroflowException(label + " must be non-empty and at most 256 characters");
+            throw new RetroflowException(teamMessage(value, label + " must be non-empty and at most 256 characters"));
         }
         return validated;
     }
 
     private int characterCount(String value) {
         return value.codePointCount(0, value.length());
+    }
+
+    private String teamMessage(String identifier, String reason) {
+        return "Team " + identifier + ": " + reason;
     }
 }

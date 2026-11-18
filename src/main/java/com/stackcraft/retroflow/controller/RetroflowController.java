@@ -7,6 +7,8 @@ import com.stackcraft.retroflow.entity.Team;
 import com.stackcraft.retroflow.exception.RetroflowException;
 import com.stackcraft.retroflow.service.RetrospectiveService;
 import com.stackcraft.retroflow.service.TeamService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ public class RetroflowController {
     }
 
     @PostMapping("/teams")
+    @ResponseStatus(HttpStatus.CREATED)
     public TeamResponse createTeam(@RequestBody TeamRequest request) {
         requireRequest(request);
         return TeamResponse.from(teamService.createTeam(request.name(), request.members()));
@@ -55,11 +59,13 @@ public class RetroflowController {
     }
 
     @DeleteMapping("/teams/{teamName}")
-    public TeamResponse deleteTeam(@PathVariable String teamName) {
-        return TeamResponse.from(teamService.deleteTeam(teamName));
+    public ResponseEntity<Void> deleteTeam(@PathVariable String teamName) {
+        teamService.deleteTeam(teamName);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/teams/{teamName}/members")
+    @ResponseStatus(HttpStatus.CREATED)
     public TeamResponse addMember(@PathVariable String teamName, @RequestBody MemberRequest request) {
         requireRequest(request);
         return TeamResponse.from(teamService.addMember(teamName, request.name()));
@@ -73,11 +79,13 @@ public class RetroflowController {
     }
 
     @DeleteMapping("/teams/{teamName}/members/{memberName}")
-    public TeamResponse removeMember(@PathVariable String teamName, @PathVariable String memberName) {
-        return TeamResponse.from(teamService.removeMember(teamName, memberName));
+    public ResponseEntity<Void> removeMember(@PathVariable String teamName, @PathVariable String memberName) {
+        teamService.removeMember(teamName, memberName);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/retrospectives")
+    @ResponseStatus(HttpStatus.CREATED)
     public RetrospectiveResponse createRetrospective(@RequestBody Map<String, Object> request) {
         rejectUnexpectedFields(request, Set.of("teamName", "title", "date", "memberName", "status"));
         String status = optionalString(request, "status");
@@ -123,6 +131,7 @@ public class RetroflowController {
     }
 
     @PostMapping("/retrospectives/{title}/feedback")
+    @ResponseStatus(HttpStatus.CREATED)
     public FeedbackResponse addFeedbackItem(@PathVariable String title, @RequestBody FeedbackRequest request) {
         requireRequest(request);
         Retrospective retrospective = retrospectiveService.getRetrospective(title);
@@ -141,9 +150,10 @@ public class RetroflowController {
     }
 
     @DeleteMapping("/feedback/{feedbackItemId}")
-    public FeedbackResponse deleteFeedbackItem(@PathVariable Long feedbackItemId,
-                                               @RequestParam String memberName) {
-        return FeedbackResponse.from(retrospectiveService.deleteFeedbackItem(feedbackItemId, memberName));
+    public ResponseEntity<Void> deleteFeedbackItem(@PathVariable Long feedbackItemId,
+                                                   @RequestParam String memberName) {
+        retrospectiveService.deleteFeedbackItem(feedbackItemId, memberName);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/retrospectives/{title}/action-items")
@@ -158,6 +168,7 @@ public class RetroflowController {
     }
 
     @PostMapping("/retrospectives/{title}/action-items")
+    @ResponseStatus(HttpStatus.CREATED)
     public ActionItemResponse addActionItem(@PathVariable String title, @RequestBody Map<String, Object> request) {
         rejectUnexpectedFields(request, Set.of("content", "priority", "submittedBy", "completed"));
         ActionItem item = retrospectiveService.addActionItem(retrospectiveService.getRetrospective(title).getId(),
@@ -191,9 +202,10 @@ public class RetroflowController {
     }
 
     @DeleteMapping("/action-items/{actionItemId}")
-    public ActionItemResponse deleteActionItem(@PathVariable Long actionItemId,
-                                               @RequestParam String memberName) {
-        return ActionItemResponse.from(retrospectiveService.deleteActionItem(actionItemId, memberName));
+    public ResponseEntity<Void> deleteActionItem(@PathVariable Long actionItemId,
+                                                 @RequestParam String memberName) {
+        retrospectiveService.deleteActionItem(actionItemId, memberName);
+        return ResponseEntity.noContent().build();
     }
 
     private void rejectUnexpectedFields(Map<String, Object> request, Set<String> allowedFields) {
